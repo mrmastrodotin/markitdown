@@ -90,13 +90,11 @@ class PdfConverter(DocumentConverter):
     ) -> DocumentConverterResult:
         # Read once; reuse bytes for all backends
      if not hasattr(file_stream, "read"):
-    raise ValueError("PdfConverter expected a binary stream or file-like object.")
-
-doc = fitz.open(stream=file_stream, filetype="pdf")  # Lazy loading, no full read
-
+            raise ValueError("PdfConverter expected a binary stream or file-like object.")
+     doc = fitz.open(stream=file_stream, filetype="pdf")
 
         # If both PyMuPDF and pdfminer are missing, fail like PptxConverter does
-        if _fitx_exc is not None and _pdfminer_exc is not None:
+     if _fitx_exc is not None and _pdfminer_exc is not None:
             raise MissingDependencyException(
                 MISSING_DEPENDENCY_MESSAGE.format(
                     converter=type(self).__name__,
@@ -106,12 +104,12 @@ doc = fitz.open(stream=file_stream, filetype="pdf")  # Lazy loading, no full rea
             ) from (_fitx_exc[1] if _fitx_exc is not None else _pdfminer_exc[1])
 
         # Try advanced conversion with PyMuPDF; if that fails, fallback to pdfminer
-        try:
+     try:
             if _fitx_exc is None:
-                return self._convert_with_fitz(file_bytes, stream_info, **kwargs)
+                return self._convert_with_fitz(file_stream, stream_info, **kwargs)
             else:
                 raise RuntimeError("PyMuPDF not available")
-        except Exception:
+     except Exception:
             # Last resort: pdfminer text extraction (previous behavior)
             if _pdfminer_exc is None:
                 try:
@@ -245,4 +243,3 @@ doc = fitz.open(stream=file_stream, filetype="pdf")  # Lazy loading, no full rea
                     md_parts.append("\n[Tables not extracted: pdfplumber not installed]\n")
 
         return DocumentConverterResult(markdown=("".join(md_parts)).strip())
-
